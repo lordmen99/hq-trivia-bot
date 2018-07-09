@@ -190,7 +190,7 @@ def get_answer(question, answers, quick):
     add_google_page_matches(question, answers, weight)
 
     # timer to click and show result after 3 seconds
-    timer = threading.Thread(target=print_soon, args=(answers, 3))
+    timer = threading.Thread(target=print_soon, args=(answers, 2))
     timer.daemon = True
     timer.start()
 
@@ -242,7 +242,7 @@ def remove_redundant_words(query):
     query = " " + query + " "
     for word in ['is', 'The', 'the', 'what', 'in', 'A', 'of' 'to', 'To', 'of', 'are', '\?'
         , '“', '“', '”']:
-        reg = re.compile('.?' + word + '[.,?! \n]')
+        reg = re.compile(' .?' + word + '[.,?! \n]')
         for match in reg.findall(query):
             # print(match)
             if query.find(word):
@@ -269,7 +269,7 @@ def parse_input(query, answers):
     for negative in negatives:
         loc = query.find(negative)
         if loc != -1:
-            query = query[:loc] + query[loc + 3:]
+            query = query[:loc] + query[loc + negative.__len__():]
             opposite = True
 
     for i in range(0, answers.__len__()):
