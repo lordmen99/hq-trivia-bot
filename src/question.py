@@ -241,19 +241,23 @@ def concatenate_answers(answers):
 def remove_redundant_words(query):
     query = " " + query + " "
     for word in ['a', 'is', 'these', 'does', 'or', 'with', 'Which', 'which', 'has', 'that', 'the', 'what', 'in',
-                 'A', 'of' 'to', 'To', 'How', 'When', 'it', 'to', 'In'
+                 'A', 'an', 'of', 'to', 'To', 'How', 'When', 'it', 'to', 'In', 'for', 'known'
         , 'as', 'by', 'these', 'on', 'of', 'and', 'was', 'Who', 'Where', 'What', 'what', 'are']:
-        reg = re.compile(r'[^A-Za-z]' + word + r'\b')
+        to_find = r'\W{0}\W'.format(word)
+        reg = re.compile(to_find)
         for match in reg.findall(query):
-            # print(match)
-            if query.find(word):
-                query = remove_word(query, match)
+            loc = query.find(match)
+            if loc is not -1:
+                query = query[:loc+1] + query[loc+match.__len__()-1:]
 
-    apostraphes = ['“', '“', '”', '”', '\?', ',']
-    for a in apostraphes:
-        query = query.replace(a, '')
+    apostrophes = ['“', '“', '”', '”', r'?', ',', r'-']
+    for a in apostrophes:
+        loc = query.find(a)
+        if loc is not -1:
+            query = query[:loc] + query[loc+1:]
+        # query = query.replace(a, '')
 
-    reg = re.compile('[\s\n]+')
+    reg = re.compile(r'\s+')
     for match in reg.findall(query):
         query = query.replace(match, ' ')
     return query
@@ -274,9 +278,9 @@ def parse_input(query, answers):
             query = query[:loc] + query[loc + negative.__len__():]
             opposite = True
 
-    apostraphes = ['“', '“', '”', '”', '"']
+    apostrophes = ['“', '“', '”', '”', '"']
     for i in range(0, answers.__len__()):
-        for a in apostraphes:
+        for a in apostrophes:
             answers[i] = answers[i].replace(a, '')
         if answers[i].__len__() == 0:
             answers.pop(i)
