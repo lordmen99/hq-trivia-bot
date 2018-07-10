@@ -190,7 +190,7 @@ def get_answer(question, answers, quick):
     add_google_page_matches(question, answers, weight)
 
     # timer to click and show result after 3 seconds
-    timer = threading.Thread(target=print_soon, args=(answers, 2))
+    timer = threading.Thread(target=print_soon, args=(answers, 2.5))
     timer.daemon = True
     timer.start()
 
@@ -240,18 +240,20 @@ def concatenate_answers(answers):
 
 def remove_redundant_words(query):
     query = " " + query + " "
-    for word in ['is', 'The', 'the', 'what', 'in', 'A', 'of' 'to', 'To', 'of', 'are', '\?'
-        , '“', '“', '”']:
-        reg = re.compile(' .?' + word + '[.,?! \n]')
+    for word in ['a', 'is', 'these', 'does', 'or', 'with', 'Which', 'which', 'has', 'that', 'the', 'what', 'in',
+                 'A', 'of' 'to', 'To', 'How', 'When', 'it', 'to', 'In'
+        , 'as', 'by', 'these', 'on', 'of', 'and', 'was', 'Who', 'Where', 'What', 'what', 'are']:
+        reg = re.compile(r'[^A-Za-z]' + word + r'\b')
         for match in reg.findall(query):
             # print(match)
             if query.find(word):
-                if match[-1] == ' ':
-                    query = remove_word(query, match[1:-1])
-                else:
-                    query = remove_word(query, match[1:-1])
+                query = remove_word(query, match)
 
-    reg = re.compile('[ \n]+')
+    apostraphes = ['“', '“', '”', '”', '\?', ',']
+    for a in apostraphes:
+        query = query.replace(a, '')
+
+    reg = re.compile('[\s\n]+')
     for match in reg.findall(query):
         query = query.replace(match, ' ')
     return query
@@ -272,7 +274,10 @@ def parse_input(query, answers):
             query = query[:loc] + query[loc + negative.__len__():]
             opposite = True
 
+    apostraphes = ['“', '“', '”', '”', '"']
     for i in range(0, answers.__len__()):
+        for a in apostraphes:
+            answers[i] = answers[i].replace(a, '')
         if answers[i].__len__() == 0:
             answers.pop(i)
     return remove_redundant_words(query), answers
