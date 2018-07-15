@@ -1,4 +1,4 @@
-# hq-trivia-bot
+# HQ TRIVIA BOT
 ## Designed to extract question and answers and click correct answer within 5-6 seconds.
 
 The bot also supports answering correctly question more complex such as:
