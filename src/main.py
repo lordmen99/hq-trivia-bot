@@ -13,7 +13,10 @@ for i in range(0, answers.__len__()):
     print(answers[i])
 
 # print final computed result to standard output
-print("answer: " + answers[get_answer(question, answers, False)])
+correct_answer = answers[get_answer(question, answers, False)]
+
+
+print("answer: " + correct_answer)
 
 # for custom questions and answers:
 

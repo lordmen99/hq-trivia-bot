@@ -1,24 +1,15 @@
 import pytesseract
 import pyscreenshot
-
+from PIL import Image
 """ in this file are functions that manage extraction of text from screen """
 
 
 # eliminate unnecessary pixels from image for better text extraction
 def separate_text(img):
-    pix = img.load()
-    w, h = img.size
-
-    # minimum white value
-    threshold = 200
-    for i in range(0, w):
-        for j in range(0, h):
-            try:
-                r, g, b = img.getpixel((i, j))
-                if r > threshold or g > threshold or b > threshold:
-                    pix[i, j] = (255, 255, 255)
-            except:
-                return "nope"
+    # img = img.resize((img.size[0] * 2, img.size[1] * 2), Image.ANTIALIAS)
+    thresh = 200
+    img = img.convert('L').point(lambda x: 255 if x > thresh else 0, mode='1')
+    # img.show()
     return img
 
 

@@ -2,7 +2,8 @@ from src.webcrawl import *
 import threading
 import time
 import pyautogui
-
+import pygame
+from gtts import gTTS
 """ in this file are functions which search for question and return final answer """
 
 sum_lock = threading.Lock()
@@ -27,6 +28,7 @@ unique = False
 threads = []
 # holds true after a click on answer has taken place
 answer_clicked = False
+answer_played = False
 
 
 # click location on screen according to answer
@@ -47,6 +49,24 @@ def click_answer():
         pyautogui.click((85 + 400) / 2, (490 + 540) / 2)
 
 
+def play_answer(answers):
+    global answer_played
+
+    if answer_played:
+        return
+
+    answer_played = True
+    tts = gTTS(text=answers[index_of_answer], lang="en")
+    tts.save("answer.mp3")
+    pygame.mixer.init()
+    pygame.init()
+    pygame.mixer.music.set_endevent(pygame.USEREVENT)
+    pygame.event.set_allowed(pygame.USEREVENT)
+    pygame.mixer.music.load('answer.mp3')
+    pygame.mixer.music.play()
+    pygame.event.wait()
+
+
 # prints answers with statistics regarding each answer's score
 def print_answers(answers):
     global opposite
@@ -61,6 +81,7 @@ def print_answers(answers):
                 index_of_answer = i
 
     click_answer()
+    # play_answer(answers)
 
     try:
         print('%s : %.2f' % (answers[index_of_answer], s[index_of_answer] / sum(s) * 100) + '%')
@@ -113,7 +134,7 @@ def add_occurrence(i, html_text, search_term, answers, weight):
                 return
 
     for j in range(0, answers.__len__()):
-        if not opposite and s[i] - s[j] > 70:
+        if not opposite and s[i] - s[j] > 80:
             if found:
                 return
             with index_of_answer_lock:
@@ -190,7 +211,7 @@ def get_answer(question, answers, quick):
     add_google_page_matches(question, answers, weight)
 
     # timer to click and show result after 3 seconds
-    timer = threading.Thread(target=print_soon, args=(answers, 2.5))
+    timer = threading.Thread(target=print_soon, args=(answers, 1.7))
     timer.daemon = True
     timer.start()
 
@@ -198,6 +219,7 @@ def get_answer(question, answers, quick):
     # page is searched. same goes for unique
     if not quick and not unique:
         for url in url_list:
+            # print(url)
             # start thread searching through current url
             thread = threading.Thread(target=search_url, args=(url, answers, weight))
             thread.daemon = True
@@ -240,9 +262,9 @@ def concatenate_answers(answers):
 
 def remove_redundant_words(query):
     query = " " + query + " "
-    for word in ['a', 'is', 'these', 'does', 'or', 'with', 'Which', 'which', 'has', 'that', 'the', 'what', 'in',
+    for word in ['a', 'did', 'him', 'at', 'its', 'around', 'is', 'these', 'does', 'or', 'with', 'Which', 'which', 'has', 'that', 'the', 'what', 'in',
                  'A', 'an', 'of', 'to', 'To', 'How', 'When', 'it', 'to', 'In', 'for', 'known'
-        , 'as', 'by', 'these', 'on', 'of', 'and', 'was', 'Who', 'Where', 'What', 'what', 'are']:
+        , 'as', 'by', 'these', 'on', 'of', 'and', 'was', 'Who', 'Where', 'What', 'what', 'are', 'would', 'you']:
         to_find = r'\W{0}\W'.format(word)
         reg = re.compile(to_find)
         for match in reg.findall(query):
@@ -271,6 +293,11 @@ def parse_input(query, answers):
     global opposite
     global unique
 
+    reg = re.compile(r'.*[wW]hich of the.*')
+    # print(query.__len__())
+    if reg.findall(query) and query.__len__() < 65:
+        query = query + " " + concatenate_answers(answers)
+
     negatives = [u'NOT', u'NEVER', u"ISN'T"]
     for negative in negatives:
         loc = query.find(negative)
@@ -278,10 +305,12 @@ def parse_input(query, answers):
             query = query[:loc] + query[loc + negative.__len__():]
             opposite = True
 
-    apostrophes = ['“', '“', '”', '”', '"']
+    symbols = ['/', '-', '(', ')', '|', ':', '\\']
     for i in range(0, answers.__len__()):
-        for a in apostrophes:
+        for a in symbols:
             answers[i] = answers[i].replace(a, '')
         if answers[i].__len__() == 0:
             answers.pop(i)
     return remove_redundant_words(query), answers
+
+ 
