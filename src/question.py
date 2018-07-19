@@ -258,13 +258,17 @@ def remove_redundant_words(query):
             if loc is not -1:
                 query = query[:loc+1] + query[loc+match.__len__()-1:]
 
-    symbols = ['/', '-', '(', ')', '|', ':', '\\', '?', '!']
+    symbols = ['-', '(', ')', '|', ':', '\\', '?', '!', '”', '“']
     for a in symbols:
         query = query.replace(a, '')
+
+    query = query.replace('\n', ' ')
+
     reg = re.compile(r'\s\s+')
 
     for match in reg.findall(query):
         query = query.replace(match, ' ')
+
     return query
 
 
