@@ -32,7 +32,7 @@ answer_played = False
 
 
 # click location on screen according to answer
-def click_answer():
+def click_answer(answers):
     global index_of_answer
     global answer_clicked
 
@@ -40,6 +40,14 @@ def click_answer():
         return
 
     answer_clicked = True
+
+    for i in range(0, answers.__len__()):
+        if opposite:
+            if s[i] < s[index_of_answer]:
+                index_of_answer = i
+        else:
+            if s[i] > s[index_of_answer]:
+                index_of_answer = i
 
     if index_of_answer is 0:
         pyautogui.click((85 + 400) / 2, (360 + 410) / 2)
@@ -72,15 +80,7 @@ def print_answers(answers):
     global opposite
     global index_of_answer
 
-    for i in range(0, answers.__len__()):
-        if opposite:
-            if s[i] < s[index_of_answer]:
-                index_of_answer = i
-        else:
-            if s[i] > s[index_of_answer]:
-                index_of_answer = i
-
-    click_answer()
+    click_answer(answers)
     # play_answer(answers)
 
     try:
@@ -215,38 +215,24 @@ def get_answer(question, answers, quick):
     timer.daemon = True
     timer.start()
 
-    # if a quick answer has been requested only google's main search
-    # page is searched. same goes for unique
-    if not quick and not unique:
-        for url in url_list:
-            # print(url)
-            # start thread searching through current url
-            thread = threading.Thread(target=search_url, args=(url, answers, weight))
-            thread.daemon = True
-            if found:
-                for thread in threads:
-                    thread.join()
+    for url in url_list:
+        # print(url)
+        # start thread searching through current url
+        thread = threading.Thread(target=search_url, args=(url, answers, weight))
+        thread.daemon = True
+        if found:
+            for thread in threads:
+                thread.join()
 
-                return index_of_answer
+            return index_of_answer
 
-            threads.append(thread)
-            thread.start()
-            # decrease next url's hit weight
-            weight = weight * 0.7
+        threads.append(thread)
+        thread.start()
+        # decrease next url's hit weight
+        weight = weight * 0.7
 
     for thread in threads:
         thread.join()
-
-    if not found:
-        for i in range(0, answers.__len__()):
-            if opposite:
-                if s[i] < s[index_of_answer]:
-                    with index_of_answer_lock:
-                        index_of_answer = i
-            else:
-                if s[i] > s[index_of_answer]:
-                    with index_of_answer_lock:
-                        index_of_answer = i
 
     print_answers(answers)
     return index_of_answer
@@ -262,7 +248,7 @@ def concatenate_answers(answers):
 
 def remove_redundant_words(query):
     query = " " + query + " "
-    for word in ['a', 'did', 'him', 'at', 'its', 'around', 'is', 'these', 'does', 'or', 'with', 'Which', 'which', 'has', 'that', 'the', 'what', 'in',
+    for word in ['a', 'involving', 'directly', 'An', 'did', 'led', 'him', 'at', 'its', 'around', 'is', 'these', 'does', 'or', 'with', 'Which', 'which', 'has', 'that', 'the', 'what', 'in',
                  'A', 'an', 'of', 'to', 'To', 'How', 'When', 'it', 'to', 'In', 'for', 'known'
         , 'as', 'by', 'these', 'on', 'of', 'and', 'was', 'Who', 'Where', 'What', 'what', 'are', 'would', 'you']:
         to_find = r'\W{0}\W'.format(word)
@@ -272,14 +258,11 @@ def remove_redundant_words(query):
             if loc is not -1:
                 query = query[:loc+1] + query[loc+match.__len__()-1:]
 
-    apostrophes = ['“', '“', '”', '”', r'?', ',', r'-']
-    for a in apostrophes:
-        loc = query.find(a)
-        if loc is not -1:
-            query = query[:loc] + query[loc+1:]
-        # query = query.replace(a, '')
+    symbols = ['/', '-', '(', ')', '|', ':', '\\', '?', '!']
+    for a in symbols:
+        query = query.replace(a, '')
+    reg = re.compile(r'\s\s+')
 
-    reg = re.compile(r'\s+')
     for match in reg.findall(query):
         query = query.replace(match, ' ')
     return query
@@ -305,7 +288,7 @@ def parse_input(query, answers):
             query = query[:loc] + query[loc + negative.__len__():]
             opposite = True
 
-    symbols = ['/', '-', '(', ')', '|', ':', '\\']
+    symbols = ['/', '(', ')', '|', ':', '\\']
     for i in range(0, answers.__len__()):
         for a in symbols:
             answers[i] = answers[i].replace(a, '')
